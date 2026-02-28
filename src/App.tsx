@@ -130,11 +130,11 @@ function App() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-4 p-4 lg:grid-cols-[250px_1fr]">
         <Card className="h-fit p-4">
-          <h1 className="mb-4 text-xl font-semibold">ST Dashboard</h1>
+          <h1 className="mb-4 text-xl font-semibold">ST 대시보드</h1>
           <div className="space-y-2 text-sm text-zinc-300">
-            <div>Global Overview</div>
-            <div>Project Deep-dive</div>
-            <div>Ad Efficiency</div>
+            <div>전체 개요</div>
+            <div>프로젝트 상세</div>
+            <div>광고 효율</div>
           </div>
 
           <div className="mt-4 flex gap-2">
@@ -146,14 +146,14 @@ function App() {
             <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             <div className="flex gap-2">
-              <Button onClick={() => setGranularity('year')}>Year</Button>
-              <Button onClick={() => setGranularity('month')}>Month</Button>
-              <Button onClick={() => setGranularity('day')}>Day</Button>
+              <Button onClick={() => setGranularity('year')}>연</Button>
+              <Button onClick={() => setGranularity('month')}>월</Button>
+              <Button onClick={() => setGranularity('day')}>일</Button>
             </div>
           </div>
 
           <div className="mt-4 text-xs text-zinc-400">
-            <p className="mb-1 font-medium">Groups</p>
+            <p className="mb-1 font-medium">그룹</p>
             <p>P {toCurrency(grouped.P, currency)}</p>
             <p>C {toCurrency(grouped.C, currency)}</p>
             <p>PC {toCurrency(grouped.PC, currency)}</p>
@@ -164,27 +164,27 @@ function App() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
               {
-                t: 'Total Portfolio Revenue',
+                t: '포트폴리오 총매출',
                 v: toCurrency(totalRevenue, currency),
-                s: `MoM ${mom.toFixed(1)}%`,
+                s: `전월 대비 ${mom.toFixed(1)}%`,
                 i: TrendingUp,
               },
               {
-                t: 'Net Revenue Performance',
+                t: '순매출',
                 v: toCurrency(totalNet, currency),
-                s: 'Net realized',
+                s: '실현 순매출',
                 i: DollarSign,
               },
               {
-                t: 'Total ROAS',
+                t: '총 ROAS',
                 v: roas.toLocaleString('en-US', { maximumFractionDigits: 2 }),
-                s: 'Revenue / Ad Spend',
+                s: '매출 / 광고비',
                 i: Gauge,
               },
               {
-                t: 'Profit Margin %',
+                t: '이익률 %',
                 v: `${margin.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`,
-                s: 'Gross Profit / Revenue',
+                s: '매출이익 / 매출',
                 i: BarChart3,
               },
             ].map((k) => (
@@ -202,7 +202,7 @@ function App() {
           </div>
 
           <Card>
-            <h2 className="mb-3 text-sm font-medium">Revenue vs Ad Spend Trend</h2>
+            <h2 className="mb-3 text-sm font-medium">매출 vs 광고비 추이</h2>
             <div className="h-72">
               <ResponsiveContainer>
                 <AreaChart data={trend} syncId="main" margin={{ top: 8, right: 16, bottom: 8, left: 28 }}>
@@ -219,9 +219,9 @@ function App() {
                     itemStyle={{ color: '#111827' }}
                     formatter={(value, name) => [
                       toCurrency(Number(value), currency),
-                      name === 'revenue' ? 'Revenue' : 'Ad Spend',
+                      name === 'revenue' ? '매출' : '광고비',
                     ]}
-                    labelFormatter={(label) => `Period: ${String(label)}`}
+                    labelFormatter={(label) => `기간: ${String(label)}`}
                   />
                   <Area dataKey="revenue" stroke="#22c55e" fill="#22c55e55" />
                   <Area dataKey="ad" stroke="#f97316" fill="#f9731655" />
@@ -232,21 +232,21 @@ function App() {
 
           <div className="space-y-4">
             <Card>
-              <h2 className="mb-3 text-sm font-medium">Top 10 Project Efficiency Matrix</h2>
+              <h2 className="mb-3 text-sm font-medium">상위 10개 프로젝트 효율 매트릭스</h2>
               <div className="h-80">
                 <ResponsiveContainer>
                   <ScatterChart margin={{ top: 12, right: 24, bottom: 20, left: 28 }}>
                     <CartesianGrid stroke="#3f3f46" />
                     <XAxis
                       dataKey="revenue"
-                      name="Revenue"
+                      name="매출"
                       height={40}
                       tick={{ fill: '#a1a1aa', fontSize: 12 }}
                       tickFormatter={(value) => toCompactNumber(Number(value))}
                     />
                     <YAxis
                       dataKey="ad"
-                      name="Ad"
+                      name="광고비"
                       width={86}
                       tick={{ fill: '#a1a1aa', fontSize: 12 }}
                       tickFormatter={(value) => toCompactNumber(Number(value))}
@@ -261,7 +261,7 @@ function App() {
             </Card>
 
             <Card>
-              <h2 className="mb-3 text-sm font-medium">Project Performance Table</h2>
+              <h2 className="mb-3 text-sm font-medium">프로젝트 성과 테이블</h2>
               <ProjectTable data={projects} currency={currency} />
             </Card>
           </div>

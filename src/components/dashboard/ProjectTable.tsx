@@ -31,20 +31,20 @@ export function ProjectTable({ data, currency }: { data: Row[]; currency: Curren
 
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [
-      { accessorKey: 'id', header: 'Project' },
+      { accessorKey: 'id', header: '프로젝트' },
       {
         accessorKey: 'revenue',
-        header: 'Revenue',
+        header: '매출',
         cell: ({ row }) => toCurrency(row.original.revenue, currency),
       },
       {
         accessorKey: 'ad',
-        header: 'Ad Spend',
+        header: '광고비',
         cell: ({ row }) => toCurrency(row.original.ad, currency),
       },
       {
         accessorKey: 'profit',
-        header: 'Profitability',
+        header: '수익성',
         cell: ({ row }) => toCurrency(row.original.profit, currency),
       },
       {
@@ -74,7 +74,7 @@ export function ProjectTable({ data, currency }: { data: Row[]; currency: Curren
   return (
     <div className="space-y-3">
       <Input
-        placeholder="Search project..."
+        placeholder="프로젝트 검색..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />

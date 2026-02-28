@@ -20,10 +20,58 @@ type Row = {
   roas: number;
 };
 
-function healthByRoas(roas: number) {
-  if (roas > 2) return { label: '양호', className: 'bg-emerald-500/20 text-emerald-200 border-emerald-500/40' };
-  if (roas >= 1) return { label: '주의', className: 'bg-amber-500/20 text-amber-200 border-amber-500/40' };
-  return { label: '위험', className: 'bg-rose-500/20 text-rose-200 border-rose-500/40' };
+function healthByMetrics(revenue: number, ad: number, roas: number) {
+  if (ad === 0 && revenue > 0) {
+    return {
+      label: 'Platinum',
+      className: 'bg-lime-500/20 text-lime-200 border-lime-500/40',
+      rank: 5,
+    };
+  }
+
+  if (ad > 0 && revenue === 0) {
+    return {
+      label: 'Critical',
+      className: 'bg-rose-500/20 text-rose-200 border-rose-500/40',
+      rank: 1,
+    };
+  }
+
+  if (ad > 0 && revenue > 0) {
+    if (roas >= 2) {
+      return {
+        label: '양호',
+        className: 'bg-emerald-500/20 text-emerald-200 border-emerald-500/40',
+        rank: 4,
+      };
+    }
+
+    if (roas >= 1) {
+      return {
+        label: '주의',
+        className: 'bg-amber-500/20 text-amber-200 border-amber-500/40',
+        rank: 3,
+      };
+    }
+
+    return {
+      label: '위험',
+      className: 'bg-rose-500/20 text-rose-200 border-rose-500/40',
+      rank: 2,
+    };
+  }
+
+  return {
+    label: '대기',
+    className: 'bg-zinc-500/20 text-zinc-200 border-zinc-500/40',
+    rank: 0,
+  };
+}
+
+function roasDisplay(revenue: number, ad: number, roas: number) {
+  if (ad === 0 && revenue > 0) return 'Organic (∞)';
+  if (ad === 0) return 'N/A';
+  return roas.toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
 
 export function ProjectTable({
@@ -81,14 +129,18 @@ export function ProjectTable({
       {
         accessorKey: 'roas',
         header: 'ROAS',
-        cell: ({ row }) => row.original.roas.toLocaleString('en-US', { maximumFractionDigits: 2 }),
+        cell: ({ row }) => roasDisplay(row.original.revenue, row.original.ad, row.original.roas),
       },
       {
         id: 'health',
         header: '상태',
-        sortingFn: (a, b) => a.original.roas - b.original.roas,
+        sortingFn: (a, b) => {
+          const ha = healthByMetrics(a.original.revenue, a.original.ad, a.original.roas);
+          const hb = healthByMetrics(b.original.revenue, b.original.ad, b.original.roas);
+          return ha.rank - hb.rank;
+        },
         cell: ({ row }) => {
-          const health = healthByRoas(row.original.roas);
+          const health = healthByMetrics(row.original.revenue, row.original.ad, row.original.roas);
           return (
             <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${health.className}`}>
               {health.label}

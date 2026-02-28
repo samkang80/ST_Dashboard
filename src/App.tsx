@@ -10,10 +10,6 @@ import {
   Legend,
   Line,
   LineChart,
-  PolarAngleAxis,
-  PolarGrid,
-  Radar,
-  RadarChart,
   ResponsiveContainer,
   Scatter,
   ScatterChart,
@@ -30,6 +26,7 @@ import {
   CheckCircle2,
   DollarSign,
   Gauge,
+  Sparkles,
   TrendingUp,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -47,30 +44,66 @@ import {
 import { ProjectTable } from '@/components/dashboard/ProjectTable';
 import type { CurrencyMode } from '@/lib/types';
 
-function getHealthMeta(roas: number) {
-  if (roas > 2) {
+function getHealthMeta(revenue: number, ad: number, roas: number) {
+  // Case A: Organic Winner
+  if (ad === 0 && revenue > 0) {
     return {
-      label: '양호',
-      icon: CheckCircle2,
-      className: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
-      dotClass: 'bg-emerald-400',
+      label: 'Platinum',
+      icon: Sparkles,
+      className: 'border-lime-400/50 bg-lime-400/15 text-lime-200',
+      dotClass: 'bg-lime-300',
+      roasDisplay: 'Organic (∞)',
     };
   }
 
-  if (roas >= 1) {
+  // Case B: Burner
+  if (ad > 0 && revenue === 0) {
     return {
-      label: '주의',
-      icon: AlertTriangle,
-      className: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
-      dotClass: 'bg-amber-400',
+      label: 'Critical',
+      icon: AlertOctagon,
+      className: 'border-rose-500/50 bg-rose-500/15 text-rose-200',
+      dotClass: 'bg-rose-400',
+      roasDisplay: '0.00',
+    };
+  }
+
+  // Case C: ROAS based (both > 0)
+  if (ad > 0 && revenue > 0) {
+    if (roas >= 2) {
+      return {
+        label: '양호',
+        icon: CheckCircle2,
+        className: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
+        dotClass: 'bg-emerald-400',
+        roasDisplay: roas.toLocaleString('en-US', { maximumFractionDigits: 2 }),
+      };
+    }
+
+    if (roas >= 1) {
+      return {
+        label: '주의',
+        icon: AlertTriangle,
+        className: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
+        dotClass: 'bg-amber-400',
+        roasDisplay: roas.toLocaleString('en-US', { maximumFractionDigits: 2 }),
+      };
+    }
+
+    return {
+      label: '위험',
+      icon: AlertOctagon,
+      className: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
+      dotClass: 'bg-rose-400',
+      roasDisplay: roas.toLocaleString('en-US', { maximumFractionDigits: 2 }),
     };
   }
 
   return {
-    label: '위험',
-    icon: AlertOctagon,
-    className: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
-    dotClass: 'bg-rose-400',
+    label: '대기',
+    icon: AlertTriangle,
+    className: 'border-zinc-500/40 bg-zinc-500/10 text-zinc-300',
+    dotClass: 'bg-zinc-400',
+    roasDisplay: 'N/A',
   };
 }
 
@@ -185,6 +218,12 @@ function App() {
     const selected = projects.find((p) => p.id === selectedProject);
     if (!selected) return null;
 
+    const roasComparable = (revenue: number, ad: number, roas: number) => {
+      if (ad > 0) return roas;
+      if (revenue > 0) return 3; // Organic winner baseline for comparison scale
+      return 0;
+    };
+
     const otherProjects = projects.filter((p) => p.id !== selectedProject);
     const avgOtherRevenue =
       otherProjects.length > 0
@@ -192,13 +231,15 @@ function App() {
         : 0;
     const avgOtherRoas =
       otherProjects.length > 0
-        ? sum(otherProjects.map((p) => p.roas)) / otherProjects.length
+        ? sum(otherProjects.map((p) => roasComparable(p.revenue, p.ad, p.roas))) / otherProjects.length
         : 0;
+
+    const selectedRoasComparable = roasComparable(selected.revenue, selected.ad, selected.roas);
 
     const portfolioContribution = totalRevenue > 0 ? (selected.revenue / totalRevenue) * 100 : 0;
 
     const revenueDelta = selected.revenue - avgOtherRevenue;
-    const roasDelta = selected.roas - avgOtherRoas;
+    const roasDelta = selectedRoasComparable - avgOtherRoas;
 
     const revenueDeltaPct =
       avgOtherRevenue > 0 ? Number(((revenueDelta / avgOtherRevenue) * 100).toFixed(1)) : 0;
@@ -212,7 +253,7 @@ function App() {
       },
       {
         metric: 'ROAS',
-        selected: selected.roas,
+        selected: selectedRoasComparable,
         others: avgOtherRoas,
       },
     ];
@@ -230,7 +271,11 @@ function App() {
     };
   }, [projects, selectedProject, totalRevenue]);
 
-  const health = getHealthMeta(selectedSummary?.selected.roas ?? 0);
+  const health = getHealthMeta(
+    selectedSummary?.selected.revenue ?? 0,
+    selectedSummary?.selected.ad ?? 0,
+    selectedSummary?.selected.roas ?? 0,
+  );
   const HealthIcon = health.icon;
 
   type ScatterDatum = {
@@ -329,7 +374,7 @@ function App() {
                       className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${health.className}`}
                     >
                       <HealthIcon className="h-3.5 w-3.5" />
-                      Health: {health.label}
+                      상태: {health.label}
                     </span>
                     <Button
                       onClick={() => setSelectedProject(null)}
@@ -356,11 +401,7 @@ function App() {
                   </Card>
                   <Card>
                     <p className="text-xs text-zinc-400">프로젝트 ROAS</p>
-                    <p className="mt-2 text-xl font-semibold">
-                      {selectedSummary.selected.roas.toLocaleString('en-US', {
-                        maximumFractionDigits: 2,
-                      })}
-                    </p>
+                    <p className="mt-2 text-xl font-semibold">{health.roasDisplay}</p>
                   </Card>
                   <Card>
                     <p className="text-xs text-zinc-400">포트폴리오 기여도</p>
@@ -499,14 +540,12 @@ function App() {
                       매출: {selectedProject} {toCurrency(selectedSummary.selected.revenue, currency)} / 평균{' '}
                       {toCurrency(selectedSummary.avgOtherRevenue, currency)}
                       <br />
-                      ROAS: {selectedProject}{' '}
-                      {selectedSummary.selected.roas.toLocaleString('en-US', {
-                        maximumFractionDigits: 2,
-                      })}{' '}
-                      / 평균{' '}
-                      {selectedSummary.avgOtherRoas.toLocaleString('en-US', {
-                        maximumFractionDigits: 2,
-                      })}
+                      ROAS: {selectedProject} {health.roasDisplay} / 평균{' '}
+                      {selectedSummary.avgOtherRoas > 0
+                        ? selectedSummary.avgOtherRoas.toLocaleString('en-US', {
+                            maximumFractionDigits: 2,
+                          })
+                        : 'N/A'}
                     </p>
                   </Card>
                 </div>

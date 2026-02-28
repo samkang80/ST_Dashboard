@@ -205,12 +205,13 @@ function App() {
             <h2 className="mb-3 text-sm font-medium">Revenue vs Ad Spend Trend</h2>
             <div className="h-72">
               <ResponsiveContainer>
-                <AreaChart data={trend} syncId="main">
+                <AreaChart data={trend} syncId="main" margin={{ top: 8, right: 16, bottom: 8, left: 28 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
                   <XAxis dataKey="period" tick={{ fill: '#a1a1aa', fontSize: 12 }} />
                   <YAxis
+                    width={82}
                     tick={{ fill: '#a1a1aa', fontSize: 12 }}
-                    tickFormatter={(value) => toNumber(Number(value))}
+                    tickFormatter={(value) => toCompactNumber(Number(value))}
                   />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #d4d4d8' }}

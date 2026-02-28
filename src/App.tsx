@@ -75,16 +75,20 @@ function getHealthMeta(roas: number) {
 }
 
 function App() {
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const latestDataDate = rows.at(-1)?.Date ?? todayIso;
+  const defaultEndDate = latestDataDate > todayIso ? todayIso : latestDataDate;
+
   const [currency, setCurrency] = useState<CurrencyMode>('LOCAL');
   const [startDate, setStartDate] = useState(rows[0]?.Date ?? '2018-01-01');
-  const [endDate, setEndDate] = useState(rows.at(-1)?.Date ?? '2030-01-01');
+  const [endDate, setEndDate] = useState(defaultEndDate);
   const [granularity, setGranularity] = useState<'year' | 'month' | 'day'>('month');
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [projectSearch, setProjectSearch] = useState('');
 
   const inRange = useMemo(
-    () => rows.filter((r) => r.Date >= startDate && r.Date <= endDate),
-    [startDate, endDate],
+    () => rows.filter((r) => r.Date >= startDate && r.Date <= endDate && r.Date <= todayIso),
+    [startDate, endDate, todayIso],
   );
 
   const enriched = useMemo(
@@ -269,8 +273,18 @@ function App() {
           </div>
 
           <div className="mt-4 space-y-2 text-xs">
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <Input
+              type="date"
+              value={startDate}
+              max={todayIso}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <Input
+              type="date"
+              value={endDate}
+              max={todayIso}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
             <div className="flex gap-2">
               <Button onClick={() => setGranularity('year')}>연</Button>
               <Button onClick={() => setGranularity('month')}>월</Button>

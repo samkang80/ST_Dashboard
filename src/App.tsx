@@ -230,7 +230,7 @@ function App() {
             </div>
           </Card>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4 2xl:grid-cols-2">
             <Card>
               <h2 className="mb-3 text-sm font-medium">Top 10 Project Efficiency Matrix</h2>
               <div className="h-80">

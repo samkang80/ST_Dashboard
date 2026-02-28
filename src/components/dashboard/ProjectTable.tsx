@@ -5,7 +5,9 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type SortingState,
 } from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toCurrency } from '@/lib/metrics';
 import type { CurrencyMode } from '@/lib/types';
@@ -20,6 +22,7 @@ type Row = {
 
 export function ProjectTable({ data, currency }: { data: Row[]; currency: CurrencyMode }) {
   const [query, setQuery] = useState('');
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'revenue', desc: true }]);
 
   const filtered = useMemo(
     () => data.filter((d) => d.id.toLowerCase().includes(query.toLowerCase())),
@@ -56,9 +59,17 @@ export function ProjectTable({ data, currency }: { data: Row[]; currency: Curren
   const table = useReactTable({
     data: filtered,
     columns,
+    state: { sorting },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const sortIcon = (isSorted: false | 'asc' | 'desc') => {
+    if (isSorted === 'asc') return <ArrowUp className="h-3.5 w-3.5" />;
+    if (isSorted === 'desc') return <ArrowDown className="h-3.5 w-3.5" />;
+    return <ArrowUpDown className="h-3.5 w-3.5" />;
+  };
 
   return (
     <div className="space-y-3">
@@ -67,16 +78,32 @@ export function ProjectTable({ data, currency }: { data: Row[]; currency: Curren
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      <div className="overflow-auto rounded-xl border border-zinc-800">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-xl border border-zinc-800">
+        <table className="w-full text-xs sm:text-sm">
           <thead className="bg-zinc-900/80">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
-                {hg.headers.map((h) => (
-                  <th key={h.id} className="p-2 text-left">
-                    {flexRender(h.column.columnDef.header, h.getContext())}
-                  </th>
-                ))}
+                {hg.headers.map((h) => {
+                  const isSorted = h.column.getIsSorted();
+                  const canSort = h.column.getCanSort();
+
+                  return (
+                    <th key={h.id} className="p-2 text-left whitespace-nowrap">
+                      {h.isPlaceholder ? null : canSort ? (
+                        <button
+                          type="button"
+                          onClick={h.column.getToggleSortingHandler()}
+                          className="inline-flex items-center gap-1 font-medium text-zinc-200 hover:text-white"
+                        >
+                          {flexRender(h.column.columnDef.header, h.getContext())}
+                          {sortIcon(isSorted)}
+                        </button>
+                      ) : (
+                        flexRender(h.column.columnDef.header, h.getContext())
+                      )}
+                    </th>
+                  );
+                })}
               </tr>
             ))}
           </thead>
@@ -84,7 +111,7 @@ export function ProjectTable({ data, currency }: { data: Row[]; currency: Curren
             {table.getRowModel().rows.map((r) => (
               <tr key={r.id} className="border-t border-zinc-800">
                 {r.getVisibleCells().map((c) => (
-                  <td key={c.id} className="p-2">
+                  <td key={c.id} className="p-2 whitespace-nowrap">
                     {flexRender(c.column.columnDef.cell, c.getContext()) ??
                       String(c.getValue() ?? '')}
                   </td>

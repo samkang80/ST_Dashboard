@@ -183,6 +183,9 @@ function App() {
                     tickFormatter={(value) => toNumber(Number(value))}
                   />
                   <Tooltip
+                    contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #d4d4d8' }}
+                    labelStyle={{ color: '#111827', fontWeight: 700 }}
+                    itemStyle={{ color: '#111827' }}
                     formatter={(value, name) => [
                       toCurrency(Number(value), currency),
                       name === 'revenue' ? 'Revenue' : 'Ad Spend',
@@ -216,6 +219,9 @@ function App() {
                     <ZAxis dataKey="profit" range={[60, 300]} />
                     <Tooltip
                       cursor={{ strokeDasharray: '3 3' }}
+                      contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #d4d4d8' }}
+                      labelStyle={{ color: '#111827', fontWeight: 700 }}
+                      itemStyle={{ color: '#111827' }}
                       formatter={(value, name) => {
                         const key = String(name);
                         if (key === 'revenue' || key === 'ad' || key === 'profit') {

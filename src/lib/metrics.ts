@@ -13,6 +13,12 @@ export const toNumber = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
+export const toCompactNumber = (value: number) =>
+  new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value);
+
 export const normalizeAmount = (value: number, exchangeRate: number, mode: CurrencyMode) =>
   mode === 'USD' ? value / (exchangeRate || 1) : value;
 

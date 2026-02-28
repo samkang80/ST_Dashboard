@@ -23,6 +23,7 @@ import {
   normalizeAmount,
   projectAggregate,
   sum,
+  toCompactNumber,
   toCurrency,
   toNumber,
 } from '@/lib/metrics';
@@ -94,6 +95,35 @@ function App() {
     P: sum(projects.filter((p) => groupedProjectIds.P.includes(p.id)).map((p) => p.revenue)),
     C: sum(projects.filter((p) => groupedProjectIds.C.includes(p.id)).map((p) => p.revenue)),
     PC: sum(projects.filter((p) => groupedProjectIds.PC.includes(p.id)).map((p) => p.revenue)),
+  };
+
+  type ScatterDatum = {
+    id: string;
+    revenue: number;
+    ad: number;
+    profit: number;
+    roas: number;
+  };
+
+  type ScatterTooltipProps = {
+    active?: boolean;
+    payload?: ReadonlyArray<{ payload: ScatterDatum }>;
+  };
+
+  const renderProjectTooltip = ({ active, payload }: ScatterTooltipProps) => {
+    if (!active || !payload?.length) return null;
+
+    const point = payload[0].payload;
+
+    return (
+      <div className="rounded-md border border-zinc-300 bg-white p-3 text-xs text-zinc-900 shadow-lg">
+        <p className="mb-2 text-sm font-semibold">프로젝트: {point.id}</p>
+        <p>매출: {toCurrency(point.revenue, currency)}</p>
+        <p>광고비: {toCurrency(point.ad, currency)}</p>
+        <p>이익: {toCurrency(point.profit, currency)}</p>
+        <p>ROAS: {point.roas.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+      </div>
+    );
   };
 
   return (
@@ -202,44 +232,31 @@ function App() {
           <div className="grid gap-4 xl:grid-cols-2">
             <Card>
               <h2 className="mb-3 text-sm font-medium">Top 10 Project Efficiency Matrix</h2>
-              <div className="h-72">
+              <div className="h-80">
                 <ResponsiveContainer>
-                  <ScatterChart>
+                  <ScatterChart margin={{ top: 12, right: 16, bottom: 18, left: 24 }}>
                     <CartesianGrid stroke="#3f3f46" />
                     <XAxis
                       dataKey="revenue"
                       name="Revenue"
-                      tickFormatter={(value) => toNumber(Number(value))}
+                      height={40}
+                      tick={{ fill: '#a1a1aa', fontSize: 12 }}
+                      tickFormatter={(value) => toCompactNumber(Number(value))}
                     />
                     <YAxis
                       dataKey="ad"
                       name="Ad"
-                      tickFormatter={(value) => toNumber(Number(value))}
+                      width={72}
+                      tick={{ fill: '#a1a1aa', fontSize: 12 }}
+                      tickFormatter={(value) => toCompactNumber(Number(value))}
                     />
                     <ZAxis dataKey="profit" range={[60, 300]} />
-                    <Tooltip
-                      cursor={{ strokeDasharray: '3 3' }}
-                      contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #d4d4d8' }}
-                      labelStyle={{ color: '#111827', fontWeight: 700 }}
-                      itemStyle={{ color: '#111827' }}
-                      formatter={(value, name) => {
-                        const key = String(name);
-                        if (key === 'revenue' || key === 'ad' || key === 'profit') {
-                          return [toCurrency(Number(value), currency), key];
-                        }
-                        if (key === 'roas') {
-                          return [
-                            Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 }),
-                            key,
-                          ];
-                        }
-                        return [toNumber(Number(value)), key];
-                      }}
-                    />
+                    <Tooltip cursor={{ strokeDasharray: '3 3' }} content={renderProjectTooltip} />
                     <Scatter data={top10} fill="#60a5fa" />
                   </ScatterChart>
                 </ResponsiveContainer>
               </div>
+              <p className="mt-2 text-xs text-zinc-400">X축: 매출 · Y축: 광고비 · 원 크기: 이익</p>
             </Card>
 
             <Card>

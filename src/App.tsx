@@ -197,19 +197,23 @@ function App() {
 
     const portfolioContribution = totalRevenue > 0 ? (selected.revenue / totalRevenue) * 100 : 0;
 
-    const revenueBase = Math.max(selected.revenue, avgOtherRevenue, 1);
-    const roasBase = Math.max(selected.roas, avgOtherRoas, 1);
+    const revenueDelta = selected.revenue - avgOtherRevenue;
+    const roasDelta = selected.roas - avgOtherRoas;
 
-    const benchmarkData = [
+    const revenueDeltaPct =
+      avgOtherRevenue > 0 ? Number(((revenueDelta / avgOtherRevenue) * 100).toFixed(1)) : 0;
+    const roasDeltaPct = avgOtherRoas > 0 ? Number(((roasDelta / avgOtherRoas) * 100).toFixed(1)) : 0;
+
+    const benchmarkBars = [
       {
         metric: '매출',
-        selected: (selected.revenue / revenueBase) * 100,
-        others: (avgOtherRevenue / revenueBase) * 100,
+        selected: selected.revenue,
+        others: avgOtherRevenue,
       },
       {
         metric: 'ROAS',
-        selected: (selected.roas / roasBase) * 100,
-        others: (avgOtherRoas / roasBase) * 100,
+        selected: selected.roas,
+        others: avgOtherRoas,
       },
     ];
 
@@ -218,7 +222,11 @@ function App() {
       avgOtherRevenue,
       avgOtherRoas,
       portfolioContribution,
-      benchmarkData,
+      benchmarkBars,
+      revenueDelta,
+      roasDelta,
+      revenueDeltaPct,
+      roasDeltaPct,
     };
   }, [projects, selectedProject, totalRevenue]);
 
@@ -421,37 +429,72 @@ function App() {
 
                   <Card>
                     <h2 className="mb-3 text-sm font-medium">벤치마크 비교 (선택 프로젝트 vs 타 프로젝트 평균)</h2>
-                    <div className="h-72">
+
+                    <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div
+                        className={`rounded-lg border px-3 py-2 text-xs ${
+                          selectedSummary.revenueDelta >= 0
+                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                            : 'border-rose-500/40 bg-rose-500/10 text-rose-200'
+                        }`}
+                      >
+                        <p className="font-semibold">매출 {selectedSummary.revenueDelta >= 0 ? '우위' : '열위'}</p>
+                        <p className="mt-1">
+                          {selectedSummary.revenueDelta >= 0 ? '+' : ''}
+                          {selectedSummary.revenueDeltaPct}%
+                        </p>
+                      </div>
+
+                      <div
+                        className={`rounded-lg border px-3 py-2 text-xs ${
+                          selectedSummary.roasDelta >= 0
+                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                            : 'border-rose-500/40 bg-rose-500/10 text-rose-200'
+                        }`}
+                      >
+                        <p className="font-semibold">ROAS {selectedSummary.roasDelta >= 0 ? '우위' : '열위'}</p>
+                        <p className="mt-1">
+                          {selectedSummary.roasDelta >= 0 ? '+' : ''}
+                          {selectedSummary.roasDeltaPct}%
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="h-64">
                       <ResponsiveContainer>
-                        <RadarChart data={selectedSummary.benchmarkData}>
-                          <PolarGrid stroke="#3f3f46" />
-                          <PolarAngleAxis dataKey="metric" tick={{ fill: '#d4d4d8', fontSize: 12 }} />
+                        <BarChart data={selectedSummary.benchmarkBars} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
+                          <XAxis dataKey="metric" tick={{ fill: '#d4d4d8', fontSize: 12 }} />
+                          <YAxis
+                            width={72}
+                            tick={{ fill: '#a1a1aa', fontSize: 12 }}
+                            tickFormatter={(value) => toCompactNumber(Number(value))}
+                          />
                           <Tooltip
-                            formatter={(value, name) => [
-                              `${Number(value).toLocaleString('en-US', {
-                                maximumFractionDigits: 1,
-                              })}%`,
-                              name === 'selected' ? selectedProject : '타 프로젝트 평균',
-                            ]}
+                            contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #d4d4d8' }}
+                            labelStyle={{ color: '#111827', fontWeight: 700 }}
+                            itemStyle={{ color: '#111827' }}
+                            formatter={(value, name, item) => {
+                              const metric = String(item?.payload?.metric ?? '');
+                              if (metric === 'ROAS') {
+                                return [
+                                  Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 }),
+                                  name === 'selected' ? selectedProject : '타 프로젝트 평균',
+                                ];
+                              }
+                              return [
+                                toCurrency(Number(value), currency),
+                                name === 'selected' ? selectedProject : '타 프로젝트 평균',
+                              ];
+                            }}
                           />
                           <Legend />
-                          <Radar
-                            dataKey="selected"
-                            name={selectedProject}
-                            stroke="#22c55e"
-                            fill="#22c55e"
-                            fillOpacity={0.28}
-                          />
-                          <Radar
-                            dataKey="others"
-                            name="타 프로젝트 평균"
-                            stroke="#f59e0b"
-                            fill="#f59e0b"
-                            fillOpacity={0.2}
-                          />
-                        </RadarChart>
+                          <Bar dataKey="selected" name={selectedProject} fill="#22c55e" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="others" name="타 프로젝트 평균" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                        </BarChart>
                       </ResponsiveContainer>
                     </div>
+
                     <p className="mt-2 text-xs text-zinc-400">
                       매출: {selectedProject} {toCurrency(selectedSummary.selected.revenue, currency)} / 평균{' '}
                       {toCurrency(selectedSummary.avgOtherRevenue, currency)}

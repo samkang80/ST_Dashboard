@@ -28,11 +28,16 @@ const HEADER_TO_ID: Record<string, string> = {
   PC08: 'PC08',
 };
 
-const input = path.resolve('data/※스토리타코 게임 매출실적기록★.xlsx');
+const preferredInput = path.resolve('data/data.xlsx');
+const fallbackInput = path.resolve('data/※스토리타코 게임 매출실적기록★.xlsx');
+const input = fs.existsSync(preferredInput) ? preferredInput : fallbackInput;
 const out = path.resolve('src/data/dashboardData.json');
 
 const workbook = XLSX.readFile(input);
-const sheet = workbook.Sheets['앱 실적 합산'];
+const targetSheetName = workbook.SheetNames.includes('앱 실적 합산')
+  ? '앱 실적 합산'
+  : workbook.SheetNames[0];
+const sheet = workbook.Sheets[targetSheetName];
 const rows = XLSX.utils.sheet_to_json<(string | number)[]>(sheet, {
   header: 1,
   raw: false,
@@ -110,6 +115,11 @@ const records = rows.slice(5).flatMap((r) => {
   const rawMonth = String(r[1] ?? '').trim();
   const rawDay = String(r[2] ?? '').trim();
 
+  // C열의 "3월", "4월" 같은 월 합계 행은 중복 집계 방지를 위해 제외
+  if (/월/.test(rawDay)) {
+    return [];
+  }
+
   if (rawYear) {
     const y = Number(rawYear.replace(/[^0-9]/g, ''));
     if (y) currentYear = y;
@@ -160,4 +170,6 @@ const records = rows.slice(5).flatMap((r) => {
 });
 
 fs.writeFileSync(out, JSON.stringify({ rows: records, projectIds: PROJECT_IDS }, null, 2));
+console.log(`Source: ${input}`);
+console.log(`Sheet: ${targetSheetName}`);
 console.log(`Wrote ${records.length} rows to ${out}`);

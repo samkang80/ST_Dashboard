@@ -27,7 +27,8 @@ Dark glassmorphism dashboard for StoryTaco portfolio revenue/ad analytics.
 ## Data source
 Excel file (downloaded with rclone):
 - Remote: `momo_dropbox:`
-- Path: `OpenClaw/※스토리타코 게임 매출실적기록★.xlsx`
+- Preferred path: `OpenClaw/data.xlsx`
+- Fallback path: `OpenClaw/※스토리타코 게임 매출실적기록★.xlsx`
 
 Transformed JSON:
 - `src/data/dashboardData.json`
@@ -37,6 +38,7 @@ Currency normalization rules during transform:
 - Cells with `$` / `USD` are converted to KRW using row-level `Exchange_Rate`.
 - Cells without currency symbol are treated as local (KRW) numeric values.
 - If `Exchange_Rate` is missing on a row, the last known valid rate is forward-filled.
+- Rows where column C contains month summary labels like `3월`, `4월` are excluded to prevent double counting.
 
 ## Setup
 ```bash
@@ -54,7 +56,7 @@ npm run preview
 ## Refresh data from Excel
 ```bash
 mkdir -p data
-rclone copy "momo_dropbox:OpenClaw/※스토리타코 게임 매출실적기록★.xlsx" ./data -v
+rclone copy "momo_dropbox:OpenClaw/data.xlsx" ./data -v
 npm run transform-data
 ```
 

@@ -65,7 +65,7 @@ Primary columns:
 - `Date`, `Exchange_Rate`, `Total_Revenue_Sum`, `Net_Revenue_Sum`, `Total_Ad_Spend`, `Gross_Profit`
 
 Project columns (generated):
-- Revenue: `P1_Total_Revenue` ~ `P38_Total_Revenue`, `C1_Total_Revenue` ~ `C27_Total_Revenue`, `PC01_Total_Revenue` ~ `PC08_Total_Revenue`, `G1_Total_Revenue`, `H1_Total_Revenue`
-- Ads: matching `*_Ad_Spend`
+- Revenue: `P1_Total_Revenue` ~ `P38_Total_Revenue`, `C1_Total_Revenue` ~ `C27_Total_Revenue`, `PC01_Total_Revenue` ~ `PC08_Total_Revenue`, `PC01M_Total_Revenue`, `G1_Total_Revenue`, `H1_Total_Revenue`
+- Ads: matching `*_Ad_Spend` (including `PC01M_Ad_Spend`)
 
 Missing columns in source are filled with `0` so the app stays stable.

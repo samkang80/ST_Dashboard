@@ -6,6 +6,7 @@ const PROJECT_IDS = [
   ...Array.from({ length: 38 }, (_, i) => `P${i + 1}`),
   ...Array.from({ length: 27 }, (_, i) => `C${i + 1}`),
   ...Array.from({ length: 8 }, (_, i) => `PC${String(i + 1).padStart(2, '0')}`),
+  'PC01M',
   'G1',
   'H1',
 ] as const;
@@ -18,7 +19,6 @@ const HEADER_TO_ID: Record<string, string> = {
   C1K: 'C1',
   C1G: 'C1',
   PC01: 'PC01',
-  PC01M: 'PC01',
   PC02: 'PC02',
   PC03: 'PC03',
   PC04: 'PC04',

@@ -123,8 +123,10 @@ function App() {
           </div>
 
           <div className="mt-4 text-xs text-zinc-400">
-            Groups: P {toCurrency(grouped.P, currency)} · C {toCurrency(grouped.C, currency)} · PC{' '}
-            {toCurrency(grouped.PC, currency)}
+            <p className="mb-1 font-medium">Groups</p>
+            <p>P {toCurrency(grouped.P, currency)}</p>
+            <p>C {toCurrency(grouped.C, currency)}</p>
+            <p>PC {toCurrency(grouped.PC, currency)}</p>
           </div>
         </Card>
 

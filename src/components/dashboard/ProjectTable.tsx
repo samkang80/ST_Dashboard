@@ -23,7 +23,7 @@ type Row = {
 function healthByMetrics(revenue: number, ad: number, roas: number) {
   if (ad === 0 && revenue > 0) {
     return {
-      label: '최우수',
+      label: '최상',
       className: 'bg-lime-500/20 text-lime-200 border-lime-500/40',
       rank: 5,
     };

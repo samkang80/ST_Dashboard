@@ -48,7 +48,7 @@ function getHealthMeta(revenue: number, ad: number, roas: number) {
   // Case A: Organic Winner
   if (ad === 0 && revenue > 0) {
     return {
-      label: '최우수',
+      label: '최상',
       icon: Sparkles,
       className: 'border-lime-400/50 bg-lime-400/15 text-lime-200',
       dotClass: 'bg-lime-300',

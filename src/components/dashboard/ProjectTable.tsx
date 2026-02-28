@@ -26,7 +26,15 @@ function healthByRoas(roas: number) {
   return { label: '위험', className: 'bg-rose-500/20 text-rose-200 border-rose-500/40' };
 }
 
-export function ProjectTable({ data, currency }: { data: Row[]; currency: CurrencyMode }) {
+export function ProjectTable({
+  data,
+  currency,
+  onSelectProject,
+}: {
+  data: Row[];
+  currency: CurrencyMode;
+  onSelectProject?: (projectId: string) => void;
+}) {
   const [query, setQuery] = useState('');
   const [sorting, setSorting] = useState<SortingState>([{ id: 'revenue', desc: true }]);
 
@@ -37,7 +45,24 @@ export function ProjectTable({ data, currency }: { data: Row[]; currency: Curren
 
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [
-      { accessorKey: 'id', header: '프로젝트' },
+      {
+        accessorKey: 'id',
+        header: '프로젝트',
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <span>{row.original.id}</span>
+            {onSelectProject ? (
+              <button
+                type="button"
+                onClick={() => onSelectProject(row.original.id)}
+                className="rounded border border-cyan-500/40 bg-cyan-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-cyan-200 hover:bg-cyan-500/20"
+              >
+                자세히
+              </button>
+            ) : null}
+          </div>
+        ),
+      },
       {
         accessorKey: 'revenue',
         header: '매출',
@@ -72,7 +97,7 @@ export function ProjectTable({ data, currency }: { data: Row[]; currency: Curren
         },
       },
     ],
-    [currency],
+    [currency, onSelectProject],
   );
 
   const table = useReactTable({

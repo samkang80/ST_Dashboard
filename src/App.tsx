@@ -84,7 +84,6 @@ function App() {
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [granularity, setGranularity] = useState<'year' | 'month' | 'day'>('month');
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [projectSearch, setProjectSearch] = useState('');
 
   const inRange = useMemo(
     () => rows.filter((r) => r.Date >= startDate && r.Date <= endDate && r.Date <= todayIso),
@@ -141,8 +140,6 @@ function App() {
     [currency, inRange],
   );
 
-  const projectById = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
-
   const top10 = projects.slice(0, 10);
 
   const grouped = {
@@ -150,11 +147,6 @@ function App() {
     C: sum(projects.filter((p) => groupedProjectIds.C.includes(p.id)).map((p) => p.revenue)),
     PC: sum(projects.filter((p) => groupedProjectIds.PC.includes(p.id)).map((p) => p.revenue)),
   };
-
-  const filteredProjectIds = useMemo(
-    () => projectIds.filter((id) => id.toLowerCase().includes(projectSearch.toLowerCase())),
-    [projectSearch],
-  );
 
   const projectDaily = useMemo(() => {
     if (!selectedProject) return [];
@@ -299,39 +291,6 @@ function App() {
             <p>PC {toCurrency(grouped.PC, currency)}</p>
           </div>
 
-          <div className="mt-5 border-t border-zinc-800 pt-3">
-            <Input
-              value={projectSearch}
-              onChange={(e) => setProjectSearch(e.target.value)}
-              placeholder="프로젝트 검색..."
-            />
-            <div className="mt-2 max-h-56 space-y-1 overflow-y-auto pr-1">
-              {filteredProjectIds.map((id) => {
-                const active = selectedProject === id;
-                const project = projectById.get(id);
-                const roas = project?.roas ?? 0;
-                const rowHealth = getHealthMeta(roas);
-
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setSelectedProject(id)}
-                    className={`w-full rounded-md border px-2 py-1 text-left text-xs transition ${
-                      active
-                        ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-200'
-                        : 'border-zinc-700 bg-zinc-900/50 text-zinc-300 hover:border-zinc-500'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{id}</span>
-                      <span className={`h-2.5 w-2.5 rounded-full ${rowHealth.dotClass}`} title={`ROAS ${roas.toFixed(2)}`} />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </Card>
 
         <div className="space-y-4">
@@ -621,7 +580,11 @@ function App() {
 
                   <Card>
                     <h2 className="mb-3 text-sm font-medium">프로젝트 성과 테이블</h2>
-                    <ProjectTable data={projects} currency={currency} />
+                    <ProjectTable
+                      data={projects}
+                      currency={currency}
+                      onSelectProject={(projectId) => setSelectedProject(projectId)}
+                    />
                   </Card>
                 </div>
               </motion.div>

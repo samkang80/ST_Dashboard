@@ -14,6 +14,7 @@ import {
   ResponsiveContainer,
   Scatter,
   ScatterChart,
+  LabelList,
   Tooltip,
   XAxis,
   YAxis,
@@ -714,7 +715,16 @@ function App() {
                           />
                           <ZAxis dataKey="profit" range={[60, 300]} />
                           <Tooltip cursor={{ strokeDasharray: '3 3' }} content={renderProjectTooltip} />
-                          <Scatter data={top10} fill="#60a5fa" />
+                          <Scatter data={top10} fill="#60a5fa">
+                            <LabelList
+                              dataKey="id"
+                              position="top"
+                              offset={8}
+                              fill="#60a5fa"
+                              fontSize={11}
+                              fontWeight={600}
+                            />
+                          </Scatter>
                         </ScatterChart>
                       </ResponsiveContainer>
                     </div>

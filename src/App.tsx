@@ -6,6 +6,7 @@ import {
   AreaChart,
   Bar,
   BarChart,
+  Cell,
   CartesianGrid,
   Legend,
   Line,
@@ -487,7 +488,11 @@ function App() {
                             itemStyle={{ color: '#111827' }}
                             formatter={(value) => [toCurrency(Number(value), currency), '매출이익']}
                           />
-                          <Bar dataKey="profit" fill="#60a5fa" />
+                          <Bar dataKey="profit">
+                            {monthlyProfit.map((entry, idx) => (
+                              <Cell key={`profit-${entry.month}-${idx}`} fill={entry.profit < 0 ? '#ef4444' : '#60a5fa'} />
+                            ))}
+                          </Bar>
                         </BarChart>
                       </ResponsiveContainer>
                     </div>

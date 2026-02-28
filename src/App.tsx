@@ -151,11 +151,17 @@ function App() {
   const projectDaily = useMemo(() => {
     if (!selectedProject) return [];
 
-    return inRange.map((r) => ({
-      date: r.Date,
-      revenue: normalizeAmount(Number(r[`${selectedProject}_Total_Revenue`] || 0), r.Exchange_Rate, currency),
-      ad: normalizeAmount(Number(r[`${selectedProject}_Ad_Spend`] || 0), r.Exchange_Rate, currency),
-    }));
+    return inRange
+      .map((r) => ({
+        date: r.Date,
+        revenue: normalizeAmount(
+          Number(r[`${selectedProject}_Total_Revenue`] || 0),
+          r.Exchange_Rate,
+          currency,
+        ),
+        ad: normalizeAmount(Number(r[`${selectedProject}_Ad_Spend`] || 0), r.Exchange_Rate, currency),
+      }))
+      .filter((r) => r.revenue > 0 || r.ad > 0);
   }, [currency, inRange, selectedProject]);
 
   const monthlyProfit = useMemo(() => {

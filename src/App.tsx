@@ -254,12 +254,16 @@ function App() {
           label: 'ROAS 비교 제외',
           value: '광고비 0원 · 유기 성장(∞)',
           className: 'border-lime-500/40 bg-lime-500/10 text-lime-200',
+          barClass: 'bg-lime-300',
+          strengthPct: 100,
         }
       : isNoSpendNoRevenue
         ? {
             label: 'ROAS 비교 불가',
             value: '광고비/매출 데이터 없음',
             className: 'border-zinc-500/40 bg-zinc-500/10 text-zinc-300',
+            barClass: 'bg-zinc-400',
+            strengthPct: 0,
           }
         : {
             label: `ROAS ${roasDelta >= 0 ? '우위' : '열위'}`,
@@ -268,18 +272,29 @@ function App() {
               roasDelta >= 0
                 ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
                 : 'border-rose-500/40 bg-rose-500/10 text-rose-200',
+            barClass: roasDelta >= 0 ? 'bg-emerald-300' : 'bg-rose-300',
+            strengthPct: Math.min(100, Math.abs(roasDeltaPct)),
           };
+
+    const revenueBase = Math.max(selected.revenue, avgOtherRevenue, 1);
+    const roasBase = Math.max(selectedRoasComparable, avgOtherRoas, 1);
 
     const benchmarkBars = [
       {
         metric: '매출',
-        selected: selected.revenue,
-        others: avgOtherRevenue,
+        valueType: 'currency' as const,
+        selectedRaw: selected.revenue,
+        othersRaw: avgOtherRevenue,
+        selectedIndex: (selected.revenue / revenueBase) * 100,
+        othersIndex: (avgOtherRevenue / revenueBase) * 100,
       },
       {
         metric: 'ROAS',
-        selected: selectedRoasComparable,
-        others: avgOtherRoas,
+        valueType: 'ratio' as const,
+        selectedRaw: selectedRoasComparable,
+        othersRaw: avgOtherRoas,
+        selectedIndex: (selectedRoasComparable / roasBase) * 100,
+        othersIndex: (avgOtherRoas / roasBase) * 100,
       },
     ];
 
@@ -293,6 +308,7 @@ function App() {
       roasDelta,
       revenueDeltaPct,
       roasDeltaPct,
+      revenueStrengthPct: Math.min(100, Math.abs(revenueDeltaPct)),
       roasComparison,
     };
   }, [projects, selectedProject, totalRevenue]);
@@ -514,11 +530,23 @@ function App() {
                           {selectedSummary.revenueDelta >= 0 ? '+' : ''}
                           {selectedSummary.revenueDeltaPct}%
                         </p>
+                        <div className="mt-2 h-1.5 rounded-full bg-black/20">
+                          <div
+                            className={`h-1.5 rounded-full ${selectedSummary.revenueDelta >= 0 ? 'bg-emerald-300' : 'bg-rose-300'}`}
+                            style={{ width: `${selectedSummary.revenueStrengthPct}%` }}
+                          />
+                        </div>
                       </div>
 
                       <div className={`rounded-lg border px-3 py-2 text-xs ${selectedSummary.roasComparison.className}`}>
                         <p className="font-semibold">{selectedSummary.roasComparison.label}</p>
                         <p className="mt-1">{selectedSummary.roasComparison.value}</p>
+                        <div className="mt-2 h-1.5 rounded-full bg-black/20">
+                          <div
+                            className={`h-1.5 rounded-full ${selectedSummary.roasComparison.barClass}`}
+                            style={{ width: `${selectedSummary.roasComparison.strengthPct}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -528,31 +556,37 @@ function App() {
                           <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
                           <XAxis dataKey="metric" tick={{ fill: '#d4d4d8', fontSize: 12 }} />
                           <YAxis
-                            width={72}
+                            width={60}
+                            domain={[0, 100]}
                             tick={{ fill: '#a1a1aa', fontSize: 12 }}
-                            tickFormatter={(value) => toCompactNumber(Number(value))}
+                            tickFormatter={(value) => `${Number(value)}%`}
                           />
                           <Tooltip
                             contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #d4d4d8' }}
                             labelStyle={{ color: '#111827', fontWeight: 700 }}
                             itemStyle={{ color: '#111827' }}
-                            formatter={(value, name, item) => {
+                            formatter={(_value, _name, item) => {
                               const metric = String(item?.payload?.metric ?? '');
+                              const series = String(item?.dataKey ?? '');
+                              const isSelected = series === 'selectedIndex';
+                              const who = isSelected ? selectedProject : '타 프로젝트 평균';
+                              const rawValue = Number(
+                                isSelected ? item?.payload?.selectedRaw ?? 0 : item?.payload?.othersRaw ?? 0,
+                              );
+
                               if (metric === 'ROAS') {
                                 return [
-                                  Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 }),
-                                  name === 'selected' ? selectedProject : '타 프로젝트 평균',
+                                  rawValue.toLocaleString('en-US', { maximumFractionDigits: 2 }),
+                                  who,
                                 ];
                               }
-                              return [
-                                toCurrency(Number(value), currency),
-                                name === 'selected' ? selectedProject : '타 프로젝트 평균',
-                              ];
+
+                              return [toCurrency(rawValue, currency), who];
                             }}
                           />
                           <Legend />
-                          <Bar dataKey="selected" name={selectedProject} fill="#22c55e" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="others" name="타 프로젝트 평균" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="selectedIndex" name={selectedProject} fill="#22c55e" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="othersIndex" name="타 프로젝트 평균" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>

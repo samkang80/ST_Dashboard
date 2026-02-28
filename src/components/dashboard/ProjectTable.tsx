@@ -20,6 +20,12 @@ type Row = {
   roas: number;
 };
 
+function healthByRoas(roas: number) {
+  if (roas > 2) return { label: '양호', className: 'bg-emerald-500/20 text-emerald-200 border-emerald-500/40' };
+  if (roas >= 1) return { label: '주의', className: 'bg-amber-500/20 text-amber-200 border-amber-500/40' };
+  return { label: '위험', className: 'bg-rose-500/20 text-rose-200 border-rose-500/40' };
+}
+
 export function ProjectTable({ data, currency }: { data: Row[]; currency: CurrencyMode }) {
   const [query, setQuery] = useState('');
   const [sorting, setSorting] = useState<SortingState>([{ id: 'revenue', desc: true }]);
@@ -52,6 +58,19 @@ export function ProjectTable({ data, currency }: { data: Row[]; currency: Curren
         header: 'ROAS',
         cell: ({ row }) => row.original.roas.toLocaleString('en-US', { maximumFractionDigits: 2 }),
       },
+      {
+        id: 'health',
+        header: '상태',
+        sortingFn: (a, b) => a.original.roas - b.original.roas,
+        cell: ({ row }) => {
+          const health = healthByRoas(row.original.roas);
+          return (
+            <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${health.className}`}>
+              {health.label}
+            </span>
+          );
+        },
+      },
     ],
     [currency],
   );
@@ -79,7 +98,7 @@ export function ProjectTable({ data, currency }: { data: Row[]; currency: Curren
         onChange={(e) => setQuery(e.target.value)}
       />
       <div className="overflow-x-auto rounded-xl border border-zinc-800">
-        <table className="w-full text-xs sm:text-sm">
+        <table className="min-w-[860px] w-full text-xs sm:text-sm">
           <thead className="bg-zinc-900/80">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>

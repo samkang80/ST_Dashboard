@@ -47,6 +47,33 @@ import {
 import { ProjectTable } from '@/components/dashboard/ProjectTable';
 import type { CurrencyMode } from '@/lib/types';
 
+function getHealthMeta(roas: number) {
+  if (roas > 2) {
+    return {
+      label: '양호',
+      icon: CheckCircle2,
+      className: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
+      dotClass: 'bg-emerald-400',
+    };
+  }
+
+  if (roas >= 1) {
+    return {
+      label: '주의',
+      icon: AlertTriangle,
+      className: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
+      dotClass: 'bg-amber-400',
+    };
+  }
+
+  return {
+    label: '위험',
+    icon: AlertOctagon,
+    className: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
+    dotClass: 'bg-rose-400',
+  };
+}
+
 function App() {
   const [currency, setCurrency] = useState<CurrencyMode>('LOCAL');
   const [startDate, setStartDate] = useState(rows[0]?.Date ?? '2018-01-01');
@@ -109,6 +136,8 @@ function App() {
     () => projectAggregate(inRange, projectIds, currency).sort((a, b) => b.revenue - a.revenue),
     [currency, inRange],
   );
+
+  const projectById = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
 
   const top10 = projects.slice(0, 10);
 
@@ -191,32 +220,7 @@ function App() {
     };
   }, [projects, selectedProject, totalRevenue]);
 
-  const health = useMemo(() => {
-    const currentRoas = selectedSummary?.selected.roas ?? 0;
-
-    if (currentRoas > 2) {
-      return {
-        label: '양호',
-        icon: CheckCircle2,
-        className: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
-      };
-    }
-
-    if (currentRoas >= 1) {
-      return {
-        label: '주의',
-        icon: AlertTriangle,
-        className: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
-      };
-    }
-
-    return {
-      label: '위험',
-      icon: AlertOctagon,
-      className: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
-    };
-  }, [selectedSummary?.selected.roas]);
-
+  const health = getHealthMeta(selectedSummary?.selected.roas ?? 0);
   const HealthIcon = health.icon;
 
   type ScatterDatum = {
@@ -290,6 +294,10 @@ function App() {
             <div className="mt-2 max-h-56 space-y-1 overflow-y-auto pr-1">
               {filteredProjectIds.map((id) => {
                 const active = selectedProject === id;
+                const project = projectById.get(id);
+                const roas = project?.roas ?? 0;
+                const rowHealth = getHealthMeta(roas);
+
                 return (
                   <button
                     key={id}
@@ -301,7 +309,10 @@ function App() {
                         : 'border-zinc-700 bg-zinc-900/50 text-zinc-300 hover:border-zinc-500'
                     }`}
                   >
-                    {id}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{id}</span>
+                      <span className={`h-2.5 w-2.5 rounded-full ${rowHealth.dotClass}`} title={`ROAS ${roas.toFixed(2)}`} />
+                    </div>
                   </button>
                 );
               })}

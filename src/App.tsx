@@ -245,6 +245,30 @@ function App() {
       avgOtherRevenue > 0 ? Number(((revenueDelta / avgOtherRevenue) * 100).toFixed(1)) : 0;
     const roasDeltaPct = avgOtherRoas > 0 ? Number(((roasDelta / avgOtherRoas) * 100).toFixed(1)) : 0;
 
+    const isOrganicWinner = selected.ad === 0 && selected.revenue > 0;
+    const isNoSpendNoRevenue = selected.ad === 0 && selected.revenue === 0;
+
+    const roasComparison = isOrganicWinner
+      ? {
+          label: 'ROAS 비교 제외',
+          value: '광고비 0원 · 유기 성장(∞)',
+          className: 'border-lime-500/40 bg-lime-500/10 text-lime-200',
+        }
+      : isNoSpendNoRevenue
+        ? {
+            label: 'ROAS 비교 불가',
+            value: '광고비/매출 데이터 없음',
+            className: 'border-zinc-500/40 bg-zinc-500/10 text-zinc-300',
+          }
+        : {
+            label: `ROAS ${roasDelta >= 0 ? '우위' : '열위'}`,
+            value: `${roasDelta >= 0 ? '+' : ''}${roasDeltaPct}%`,
+            className:
+              roasDelta >= 0
+                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                : 'border-rose-500/40 bg-rose-500/10 text-rose-200',
+          };
+
     const benchmarkBars = [
       {
         metric: '매출',
@@ -268,6 +292,7 @@ function App() {
       roasDelta,
       revenueDeltaPct,
       roasDeltaPct,
+      roasComparison,
     };
   }, [projects, selectedProject, totalRevenue]);
 
@@ -486,18 +511,9 @@ function App() {
                         </p>
                       </div>
 
-                      <div
-                        className={`rounded-lg border px-3 py-2 text-xs ${
-                          selectedSummary.roasDelta >= 0
-                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
-                            : 'border-rose-500/40 bg-rose-500/10 text-rose-200'
-                        }`}
-                      >
-                        <p className="font-semibold">ROAS {selectedSummary.roasDelta >= 0 ? '우위' : '열위'}</p>
-                        <p className="mt-1">
-                          {selectedSummary.roasDelta >= 0 ? '+' : ''}
-                          {selectedSummary.roasDeltaPct}%
-                        </p>
+                      <div className={`rounded-lg border px-3 py-2 text-xs ${selectedSummary.roasComparison.className}`}>
+                        <p className="font-semibold">{selectedSummary.roasComparison.label}</p>
+                        <p className="mt-1">{selectedSummary.roasComparison.value}</p>
                       </div>
                     </div>
 

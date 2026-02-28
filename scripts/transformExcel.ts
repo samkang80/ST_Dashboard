@@ -33,7 +33,11 @@ const out = path.resolve('src/data/dashboardData.json');
 
 const workbook = XLSX.readFile(input);
 const sheet = workbook.Sheets['앱 실적 합산'];
-const rows = XLSX.utils.sheet_to_json<(string | number)[]>(sheet, { header: 1, raw: false, defval: '' });
+const rows = XLSX.utils.sheet_to_json<(string | number)[]>(sheet, {
+  header: 1,
+  raw: false,
+  defval: '',
+});
 const headers = rows[4] as string[];
 
 const projectRevenueCols: Record<string, number> = {};
@@ -49,10 +53,44 @@ headers.forEach((h, idx) => {
   if (match[2] === '광고') projectAdCols[id] = idx;
 });
 
-const num = (v: unknown) => {
-  const s = String(v ?? '').replace(/[^0-9.-]/g, '');
-  const n = Number(s);
+const parseNumber = (v: unknown) => {
+  const source = String(v ?? '').trim();
+  if (!source) return 0;
+
+  const normalized = source
+    .replace(/[()]/g, '')
+    .replace(/,/g, '')
+    .replace(/[^0-9.-]/g, '');
+
+  const n = Number(normalized);
   return Number.isFinite(n) ? n : 0;
+};
+
+/**
+ * Excel 셀에 통화 기호가 섞여 있어도 KRW 기준으로 정규화한다.
+ * - ₩: 그대로 KRW
+ * - $: Exchange_Rate를 곱해 KRW로 환산
+ * - 기호 없음: 원본 값(기존 데이터 관례상 KRW) 유지
+ */
+const parseMoneyCellToKrw = (v: unknown, exchangeRate: number) => {
+  const raw = String(v ?? '').trim();
+  if (!raw) return 0;
+
+  const amount = parseNumber(raw);
+  if (!amount) return 0;
+
+  const hasDollar = /[$]|USD/i.test(raw);
+  const hasWon = /[₩]|KRW|원/i.test(raw);
+
+  if (hasDollar && exchangeRate > 0) {
+    return amount * exchangeRate;
+  }
+
+  if (hasWon) {
+    return amount;
+  }
+
+  return amount;
 };
 
 let currentYear = 0;
@@ -78,18 +116,22 @@ const records = rows.slice(5).flatMap((r) => {
 
   const isoDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
+  const exchangeRate = parseNumber(r[4]);
+
   const rec: Record<string, number | string> = {
     Date: isoDate,
-    Exchange_Rate: num(r[4]),
-    Total_Revenue_Sum: num(r[5]),
-    Net_Revenue_Sum: num(r[6]),
-    Total_Ad_Spend: num(r[7]),
-    Gross_Profit: num(r[8]),
+    Exchange_Rate: exchangeRate,
+    Total_Revenue_Sum: parseMoneyCellToKrw(r[5], exchangeRate),
+    Net_Revenue_Sum: parseMoneyCellToKrw(r[6], exchangeRate),
+    Total_Ad_Spend: parseMoneyCellToKrw(r[7], exchangeRate),
+    Gross_Profit: parseMoneyCellToKrw(r[8], exchangeRate),
   };
 
   PROJECT_IDS.forEach((id) => {
-    rec[`${id}_Total_Revenue`] = projectRevenueCols[id] !== undefined ? num(r[projectRevenueCols[id]]) : 0;
-    rec[`${id}_Ad_Spend`] = projectAdCols[id] !== undefined ? num(r[projectAdCols[id]]) : 0;
+    rec[`${id}_Total_Revenue`] =
+      projectRevenueCols[id] !== undefined ? parseMoneyCellToKrw(r[projectRevenueCols[id]], exchangeRate) : 0;
+    rec[`${id}_Ad_Spend`] =
+      projectAdCols[id] !== undefined ? parseMoneyCellToKrw(r[projectAdCols[id]], exchangeRate) : 0;
   });
 
   return rec;

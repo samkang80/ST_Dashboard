@@ -32,6 +32,11 @@ Excel file (downloaded with rclone):
 Transformed JSON:
 - `src/data/dashboardData.json`
 
+Currency normalization rules during transform:
+- Cells with `₩` / `KRW` are treated as KRW.
+- Cells with `$` / `USD` are converted to KRW using row-level `Exchange_Rate`.
+- Cells without currency symbol are treated as local (KRW) numeric values.
+
 ## Setup
 ```bash
 npm install

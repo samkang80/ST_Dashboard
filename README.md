@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ST Dashboard (Vite + React)
 
-## Getting Started
+Dark glassmorphism dashboard for StoryTaco portfolio revenue/ad analytics.
 
-First, run the development server:
+## Stack
+- React + Vite + TypeScript
+- Tailwind CSS
+- Recharts
+- TanStack Table
+- lucide-react
+- framer-motion
+- shadcn-style UI primitives (`Card`, `Button`, `Input`)
 
+## Features
+- Global KPI cards
+  - Total Portfolio Revenue + MoM growth
+  - Net Revenue Performance
+  - Total ROAS
+  - Profit Margin %
+- Main synchronized trend chart: Revenue vs Ad Spend
+- Project efficiency matrix (Top 10)
+- Project performance table (search + sort)
+- Currency toggle (KRW / USD via `Exchange_Rate`)
+- Date range filtering and year/month/day granularity
+- Smart group aggregates for P / C / PC series
+
+## Data source
+Excel file (downloaded with rclone):
+- Remote: `momo_dropbox:`
+- Path: `OpenClaw/※스토리타코 게임 매출실적기록★.xlsx`
+
+Transformed JSON:
+- `src/data/dashboardData.json`
+
+## Setup
 ```bash
+npm install
+npm run transform-data
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Build
+```bash
+npm run build
+npm run preview
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Refresh data from Excel
+```bash
+mkdir -p data
+rclone copy "momo_dropbox:OpenClaw/※스토리타코 게임 매출실적기록★.xlsx" ./data -v
+npm run transform-data
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Schema support
+Primary columns:
+- `Date`, `Exchange_Rate`, `Total_Revenue_Sum`, `Net_Revenue_Sum`, `Total_Ad_Spend`, `Gross_Profit`
 
-## Learn More
+Project columns (generated):
+- Revenue: `P1_Total_Revenue` ~ `P38_Total_Revenue`, `C1_Total_Revenue` ~ `C27_Total_Revenue`, `PC01_Total_Revenue` ~ `PC08_Total_Revenue`, `G1_Total_Revenue`, `H1_Total_Revenue`
+- Ads: matching `*_Ad_Spend`
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Missing columns in source are filled with `0` so the app stays stable.

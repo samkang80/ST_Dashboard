@@ -36,6 +36,7 @@ Currency normalization rules during transform:
 - Cells with `₩` / `KRW` are treated as KRW.
 - Cells with `$` / `USD` are converted to KRW using row-level `Exchange_Rate`.
 - Cells without currency symbol are treated as local (KRW) numeric values.
+- If `Exchange_Rate` is missing on a row, the last known valid rate is forward-filled.
 
 ## Setup
 ```bash

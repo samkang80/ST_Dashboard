@@ -40,8 +40,8 @@ const rows = XLSX.utils.sheet_to_json<(string | number)[]>(sheet, {
 });
 const headers = rows[4] as string[];
 
-const projectRevenueCols: Record<string, number> = {};
-const projectAdCols: Record<string, number> = {};
+const projectRevenueCols: Record<string, number[]> = {};
+const projectAdCols: Record<string, number[]> = {};
 
 headers.forEach((h, idx) => {
   if (!h) return;
@@ -49,8 +49,16 @@ headers.forEach((h, idx) => {
   if (!match) return;
   const raw = match[1];
   const id = HEADER_TO_ID[raw] ?? raw;
-  if (match[2] === '총매출') projectRevenueCols[id] = idx;
-  if (match[2] === '광고') projectAdCols[id] = idx;
+
+  if (match[2] === '총매출') {
+    if (!projectRevenueCols[id]) projectRevenueCols[id] = [];
+    projectRevenueCols[id].push(idx);
+  }
+
+  if (match[2] === '광고') {
+    if (!projectAdCols[id]) projectAdCols[id] = [];
+    projectAdCols[id].push(idx);
+  }
 });
 
 const parseNumber = (v: unknown) => {
@@ -95,6 +103,7 @@ const parseMoneyCellToKrw = (v: unknown, exchangeRate: number) => {
 
 let currentYear = 0;
 let currentMonth = 0;
+let lastKnownExchangeRate = 1300;
 
 const records = rows.slice(5).flatMap((r) => {
   const rawYear = String(r[0] ?? '').trim();
@@ -116,7 +125,12 @@ const records = rows.slice(5).flatMap((r) => {
 
   const isoDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-  const exchangeRate = parseNumber(r[4]);
+  const rawExchangeRate = parseNumber(r[4]);
+  if (rawExchangeRate > 0) {
+    lastKnownExchangeRate = rawExchangeRate;
+  }
+
+  const exchangeRate = rawExchangeRate > 0 ? rawExchangeRate : lastKnownExchangeRate;
 
   const rec: Record<string, number | string> = {
     Date: isoDate,
@@ -128,10 +142,18 @@ const records = rows.slice(5).flatMap((r) => {
   };
 
   PROJECT_IDS.forEach((id) => {
-    rec[`${id}_Total_Revenue`] =
-      projectRevenueCols[id] !== undefined ? parseMoneyCellToKrw(r[projectRevenueCols[id]], exchangeRate) : 0;
-    rec[`${id}_Ad_Spend`] =
-      projectAdCols[id] !== undefined ? parseMoneyCellToKrw(r[projectAdCols[id]], exchangeRate) : 0;
+    const revenueCols = projectRevenueCols[id] ?? [];
+    const adCols = projectAdCols[id] ?? [];
+
+    rec[`${id}_Total_Revenue`] = revenueCols.reduce(
+      (acc, colIdx) => acc + parseMoneyCellToKrw(r[colIdx], exchangeRate),
+      0,
+    );
+
+    rec[`${id}_Ad_Spend`] = adCols.reduce(
+      (acc, colIdx) => acc + parseMoneyCellToKrw(r[colIdx], exchangeRate),
+      0,
+    );
   });
 
   return rec;

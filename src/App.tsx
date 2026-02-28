@@ -48,18 +48,18 @@ function getHealthMeta(revenue: number, ad: number, roas: number) {
   // Case A: Organic Winner
   if (ad === 0 && revenue > 0) {
     return {
-      label: 'Platinum',
+      label: '최우수',
       icon: Sparkles,
       className: 'border-lime-400/50 bg-lime-400/15 text-lime-200',
       dotClass: 'bg-lime-300',
-      roasDisplay: 'Organic (∞)',
+      roasDisplay: '유기 성장(∞)',
     };
   }
 
   // Case B: Burner
   if (ad > 0 && revenue === 0) {
     return {
-      label: 'Critical',
+      label: '치명',
       icon: AlertOctagon,
       className: 'border-rose-500/50 bg-rose-500/15 text-rose-200',
       dotClass: 'bg-rose-400',

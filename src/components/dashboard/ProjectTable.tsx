@@ -23,7 +23,7 @@ type Row = {
 function healthByMetrics(revenue: number, ad: number, roas: number) {
   if (ad === 0 && revenue > 0) {
     return {
-      label: 'Platinum',
+      label: '최우수',
       className: 'bg-lime-500/20 text-lime-200 border-lime-500/40',
       rank: 5,
     };
@@ -31,7 +31,7 @@ function healthByMetrics(revenue: number, ad: number, roas: number) {
 
   if (ad > 0 && revenue === 0) {
     return {
-      label: 'Critical',
+      label: '치명',
       className: 'bg-rose-500/20 text-rose-200 border-rose-500/40',
       rank: 1,
     };
@@ -69,7 +69,7 @@ function healthByMetrics(revenue: number, ad: number, roas: number) {
 }
 
 function roasDisplay(revenue: number, ad: number, roas: number) {
-  if (ad === 0 && revenue > 0) return 'Organic (∞)';
+  if (ad === 0 && revenue > 0) return '유기 성장(∞)';
   if (ad === 0) return 'N/A';
   return roas.toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
@@ -133,12 +133,8 @@ export function ProjectTable({
       },
       {
         id: 'health',
+        accessorFn: (row) => healthByMetrics(row.revenue, row.ad, row.roas).rank,
         header: '상태',
-        sortingFn: (a, b) => {
-          const ha = healthByMetrics(a.original.revenue, a.original.ad, a.original.roas);
-          const hb = healthByMetrics(b.original.revenue, b.original.ad, b.original.roas);
-          return ha.rank - hb.rank;
-        },
         cell: ({ row }) => {
           const health = healthByMetrics(row.original.revenue, row.original.ad, row.original.roas);
           return (

@@ -128,7 +128,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 p-4 lg:grid-cols-[250px_1fr]">
+      <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-4 p-4 lg:grid-cols-[250px_1fr]">
         <Card className="h-fit p-4">
           <h1 className="mb-4 text-xl font-semibold">ST Dashboard</h1>
           <div className="space-y-2 text-sm text-zinc-300">
@@ -230,12 +230,12 @@ function App() {
             </div>
           </Card>
 
-          <div className="grid gap-4 2xl:grid-cols-2">
+          <div className="space-y-4">
             <Card>
               <h2 className="mb-3 text-sm font-medium">Top 10 Project Efficiency Matrix</h2>
               <div className="h-80">
                 <ResponsiveContainer>
-                  <ScatterChart margin={{ top: 12, right: 16, bottom: 18, left: 24 }}>
+                  <ScatterChart margin={{ top: 12, right: 24, bottom: 20, left: 28 }}>
                     <CartesianGrid stroke="#3f3f46" />
                     <XAxis
                       dataKey="revenue"
@@ -247,7 +247,7 @@ function App() {
                     <YAxis
                       dataKey="ad"
                       name="Ad"
-                      width={72}
+                      width={86}
                       tick={{ fill: '#a1a1aa', fontSize: 12 }}
                       tickFormatter={(value) => toCompactNumber(Number(value))}
                     />
